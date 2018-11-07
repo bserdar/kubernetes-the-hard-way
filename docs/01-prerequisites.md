@@ -1,57 +1,37 @@
 # Prerequisites
 
-## Google Cloud Platform
+## Hosts
 
-This tutorial leverages the [Google Cloud Platform](https://cloud.google.com/) to streamline provisioning of the compute infrastructure required to bootstrap a Kubernetes cluster from the ground up. [Sign up](https://cloud.google.com/free/) for $300 in free credits.
+This version of the tutorial installs Kubernetes on bare-metal hosts
+or VMs on a home network. This has some differences from the original
+Kelsey Hightower tutorial, notably:
 
-[Estimated cost](https://cloud.google.com/products/calculator/#id=78df6ced-9c50-48f8-a670-bc5003f2ddaa) to run this tutorial: $0.22 per hour ($5.39 per day).
+ - This is for bare-metal servers or VMs on trusted network
+ - All VMs are on the same network. This means, if you have
+   multiple hosts running vms, you have to setup networking
+   so that the VMs can talk to each other. In my case, I have
+   a Linux bridge setup for my server so my VMs show up in the
+   same network as the rest of my home network (192.168.1.0/24).
+ - Host name resolution is done with /etc/resolv.conf
+ - Networking is done using kube-router
+ - OS image is Centos 7
+ - There is one controller and three worker nodes. Later I may try
+   HA setup.
 
-> The compute resources required for this tutorial exceed the Google Cloud Platform free tier.
 
-## Google Cloud Platform SDK
-
-### Install the Google Cloud SDK
-
-Follow the Google Cloud SDK [documentation](https://cloud.google.com/sdk/) to install and configure the `gcloud` command line utility.
-
-Verify the Google Cloud SDK version is 218.0.0 or higher:
-
-```
-gcloud version
-```
-
-### Set a Default Compute Region and Zone
-
-This tutorial assumes a default compute region and zone have been configured.
-
-If you are using the `gcloud` command-line tool for the first time `init` is the easiest way to do this:
+This is what I have:
 
 ```
-gcloud init
+192.168.1.128 controller-1
+192.168.1.177 worker-1
+192.168.1.197 worker-2
+192.168.1.48 worker-3
 ```
 
-Otherwise set a default compute region:
+Stop and disable firewalld on all hosts. This causes problems down the road.
 
-```
-gcloud config set compute/region us-west1
-```
+Update /etc/hosts on each host and localhost to add your host list.
 
-Set a default compute zone:
+This tutorial runs with root user on all nodes.
 
-```
-gcloud config set compute/zone us-west1-c
-```
-
-> Use the `gcloud compute zones list` command to view additional regions and zones.
-
-## Running Commands in Parallel with tmux
-
-[tmux](https://github.com/tmux/tmux/wiki) can be used to run commands on multiple compute instances at the same time. Labs in this tutorial may require running the same commands across multiple compute instances, in those cases consider using tmux and splitting a window into multiple panes with `synchronize-panes` enabled to speed up the provisioning process.
-
-> The use of tmux is optional and not required to complete this tutorial.
-
-![tmux screenshot](images/tmux-screenshot.png)
-
-> Enable `synchronize-panes`: `ctrl+b` then `shift :`. Then type `set synchronize-panes on` at the prompt. To disable synchronization: `set synchronize-panes off`.
-
-Next: [Installing the Client Tools](02-client-tools.md)
+Next: [Installing Client Tools](02-client-tools.md)

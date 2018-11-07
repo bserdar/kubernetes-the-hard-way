@@ -46,7 +46,7 @@ cat > ca-csr.json <<EOF
 }
 EOF
 
-cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+./cfssl gencert -initca ca-csr.json | ./cfssljson -bare ca
 
 }
 ```
@@ -88,12 +88,12 @@ cat > admin-csr.json <<EOF
 }
 EOF
 
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
   -profile=kubernetes \
-  admin-csr.json | cfssljson -bare admin
+  admin-csr.json | ./cfssljson -bare admin
 
 }
 ```
@@ -112,7 +112,7 @@ Kubernetes uses a [special-purpose authorization mode](https://kubernetes.io/doc
 Generate a certificate and private key for each Kubernetes worker node:
 
 ```
-for instance in worker-0 worker-1 worker-2; do
+for instance in worker-{1,2,3}; do
 cat > ${instance}-csr.json <<EOF
 {
   "CN": "system:node:${instance}",
@@ -132,31 +132,27 @@ cat > ${instance}-csr.json <<EOF
 }
 EOF
 
-EXTERNAL_IP=$(gcloud compute instances describe ${instance} \
-  --format 'value(networkInterfaces[0].accessConfigs[0].natIP)')
+HOST_IP=`grep ${instance} /etc/hosts |cut -f 1 -d " "`
 
-INTERNAL_IP=$(gcloud compute instances describe ${instance} \
-  --format 'value(networkInterfaces[0].networkIP)')
-
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
-  -hostname=${instance},${EXTERNAL_IP},${INTERNAL_IP} \
+  -hostname=${instance},${HOST_IP} \
   -profile=kubernetes \
-  ${instance}-csr.json | cfssljson -bare ${instance}
+  ${instance}-csr.json | ./cfssljson -bare ${instance}
 done
 ```
 
 Results:
 
 ```
-worker-0-key.pem
-worker-0.pem
 worker-1-key.pem
 worker-1.pem
 worker-2-key.pem
 worker-2.pem
+worker-3-key.pem
+worker-3.pem
 ```
 
 ### The Controller Manager Client Certificate
@@ -185,12 +181,12 @@ cat > kube-controller-manager-csr.json <<EOF
 }
 EOF
 
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
   -profile=kubernetes \
-  kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager
+  kube-controller-manager-csr.json | ./cfssljson -bare kube-controller-manager
 
 }
 ```
@@ -229,12 +225,12 @@ cat > kube-proxy-csr.json <<EOF
 }
 EOF
 
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
   -profile=kubernetes \
-  kube-proxy-csr.json | cfssljson -bare kube-proxy
+  kube-proxy-csr.json | ./cfssljson -bare kube-proxy
 
 }
 ```
@@ -272,12 +268,12 @@ cat > kube-scheduler-csr.json <<EOF
 }
 EOF
 
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
   -profile=kubernetes \
-  kube-scheduler-csr.json | cfssljson -bare kube-scheduler
+  kube-scheduler-csr.json | ./cfssljson -bare kube-scheduler
 
 }
 ```
@@ -299,9 +295,7 @@ Generate the Kubernetes API Server certificate and private key:
 ```
 {
 
-KUBERNETES_PUBLIC_ADDRESS=$(gcloud compute addresses describe kubernetes-the-hard-way \
-  --region $(gcloud config get-value compute/region) \
-  --format 'value(address)')
+KUBERNETES_PUBLIC_ADDRESS=`grep controller-1 /etc/hosts|cut -f 1 -d " "`
 
 cat > kubernetes-csr.json <<EOF
 {
@@ -322,13 +316,13 @@ cat > kubernetes-csr.json <<EOF
 }
 EOF
 
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
-  -hostname=10.32.0.1,10.240.0.10,10.240.0.11,10.240.0.12,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
+  -hostname=10.32.0.1,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
   -profile=kubernetes \
-  kubernetes-csr.json | cfssljson -bare kubernetes
+  kubernetes-csr.json | ./cfssljson -bare kubernetes
 
 }
 ```
@@ -368,12 +362,12 @@ cat > service-account-csr.json <<EOF
 }
 EOF
 
-cfssl gencert \
+./cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
   -profile=kubernetes \
-  service-account-csr.json | cfssljson -bare service-account
+  service-account-csr.json | ./cfssljson -bare service-account
 
 }
 ```
@@ -391,17 +385,17 @@ service-account.pem
 Copy the appropriate certificates and private keys to each worker instance:
 
 ```
-for instance in worker-0 worker-1 worker-2; do
-  gcloud compute scp ca.pem ${instance}-key.pem ${instance}.pem ${instance}:~/
+for instance in worker-1 worker-2 worker-3; do
+   scp ca.pem ${instance}-key.pem ${instance}.pem root@${instance}:/root
 done
 ```
 
 Copy the appropriate certificates and private keys to each controller instance:
 
 ```
-for instance in controller-0 controller-1 controller-2; do
-  gcloud compute scp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
-    service-account-key.pem service-account.pem ${instance}:~/
+for instance in controller-1 ; do
+  scp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
+    service-account-key.pem service-account.pem root@${instance}:/root
 done
 ```
 

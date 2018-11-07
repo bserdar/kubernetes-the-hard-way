@@ -323,4 +323,3 @@ UID       PID       PPID      C         STIME     TIME      CMD
 I0930 19:31:31.422022   21217 x:0] Exiting with status: 0
 ```
 
-Next: [Cleaning Up](14-cleanup.md)

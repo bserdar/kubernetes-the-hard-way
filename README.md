@@ -1,29 +1,16 @@
-# Kubernetes The Hard Way
+# Kubernetes The Hard Way - Bare Metal Edition
 
-This tutorial walks you through setting up Kubernetes the hard way. This guide is not for people looking for a fully automated command to bring up a Kubernetes cluster. If that's you then check out [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine), or the [Getting Started Guides](http://kubernetes.io/docs/getting-started-guides/).
+This tutorial is copied and modified from [Kelsey Hightower's original](https://github.com/kelseyhightower/kubernetes-the-hard-way/tree/master/docs)
 
-Kubernetes The Hard Way is optimized for learning, which means taking the long route to ensure you understand each task required to bootstrap a Kubernetes cluster.
+It installs a Kubernetes cluster on a home network with bare-metal
+nodes or VMs. At this point it sets up one controller and three worker
+nodes. You can add as many workers as you want, but adding new controllers
+will require a load balancer.
 
-> The results of this tutorial should not be viewed as production ready, and may receive limited support from the community, but don't let that stop you from learning!
-
-## Target Audience
-
-The target audience for this tutorial is someone planning to support a production Kubernetes cluster and wants to understand how everything fits together.
-
-## Cluster Details
-
-Kubernetes The Hard Way guides you through bootstrapping a highly available Kubernetes cluster with end-to-end encryption between components and RBAC authentication.
-
-* [Kubernetes](https://github.com/kubernetes/kubernetes) 1.12.0
-* [containerd Container Runtime](https://github.com/containerd/containerd) 1.2.0-rc.0
-* [gVisor](https://github.com/google/gvisor) 50c283b9f56bb7200938d9e207355f05f79f0d17
-* [CNI Container Networking](https://github.com/containernetworking/cni) 0.6.0
-* [etcd](https://github.com/coreos/etcd) v3.3.9
-* [CoreDNS](https://github.com/coredns/coredns) v1.2.2
+This uses [kube-router](https://github.com/cloudnativelabs/kube-router) to setup pod networking.
 
 ## Labs
 
-This tutorial assumes you have access to the [Google Cloud Platform](https://cloud.google.com). While GCP is used for basic infrastructure requirements the lessons learned in this tutorial can be applied to other platforms.
 
 * [Prerequisites](docs/01-prerequisites.md)
 * [Installing the Client Tools](docs/02-client-tools.md)
@@ -38,4 +25,4 @@ This tutorial assumes you have access to the [Google Cloud Platform](https://clo
 * [Provisioning Pod Network Routes](docs/11-pod-network-routes.md)
 * [Deploying the DNS Cluster Add-on](docs/12-dns-addon.md)
 * [Smoke Test](docs/13-smoke-test.md)
-* [Cleaning Up](docs/14-cleanup.md)
+

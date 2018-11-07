@@ -4,15 +4,8 @@ In this lab you will bootstrap three Kubernetes worker nodes. The following comp
 
 ## Prerequisites
 
-The commands in this lab must be run on each worker instance: `worker-0`, `worker-1`, and `worker-2`. Login to each worker instance using the `gcloud` command. Example:
+The commands in this lab must be run on each worker instance: `worker-1`, `worker-2`, and `worker-3`.
 
-```
-gcloud compute ssh worker-0
-```
-
-### Running commands in parallel with tmux
-
-[tmux](https://github.com/tmux/tmux/wiki) can be used to run commands on multiple compute instances at the same time. See the [Running commands in parallel with tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux) section in the Prerequisites lab.
 
 ## Provisioning a Kubernetes Worker Node
 
@@ -20,8 +13,7 @@ Install the OS dependencies:
 
 ```
 {
-  sudo apt-get update
-  sudo apt-get -y install socat conntrack ipset
+for f in worker-{1,2,3}; do ssh root@$f yum install -y socat conntrack ipset; done
 }
 ```
 
@@ -30,7 +22,7 @@ Install the OS dependencies:
 ### Download and Install Worker Binaries
 
 ```
-wget -q --show-progress --https-only --timestamping \
+wget  \
   https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.12.0/crictl-v1.12.0-linux-amd64.tar.gz \
   https://storage.googleapis.com/kubernetes-the-hard-way/runsc-50c283b9f56bb7200938d9e207355f05f79f0d17 \
   https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
@@ -63,51 +55,14 @@ Install the worker binaries:
   sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
   sudo tar -xvf crictl-v1.12.0-linux-amd64.tar.gz -C /usr/local/bin/
   sudo tar -xvf cni-plugins-amd64-v0.6.0.tgz -C /opt/cni/bin/
-  sudo tar -xvf containerd-1.2.0-rc.0.linux-amd64.tar.gz -C /
+  tar -xvf containerd-1.2.0-rc.0.linux-amd64.tar.gz
+  sudo  mv bin/* /bin
 }
 ```
 
 ### Configure CNI Networking
 
-Retrieve the Pod CIDR range for the current compute instance:
-
-```
-POD_CIDR=$(curl -s -H "Metadata-Flavor: Google" \
-  http://metadata.google.internal/computeMetadata/v1/instance/attributes/pod-cidr)
-```
-
-Create the `bridge` network configuration file:
-
-```
-cat <<EOF | sudo tee /etc/cni/net.d/10-bridge.conf
-{
-    "cniVersion": "0.3.1",
-    "name": "bridge",
-    "type": "bridge",
-    "bridge": "cnio0",
-    "isGateway": true,
-    "ipMasq": true,
-    "ipam": {
-        "type": "host-local",
-        "ranges": [
-          [{"subnet": "${POD_CIDR}"}]
-        ],
-        "routes": [{"dst": "0.0.0.0/0"}]
-    }
-}
-EOF
-```
-
-Create the `loopback` network configuration file:
-
-```
-cat <<EOF | sudo tee /etc/cni/net.d/99-loopback.conf
-{
-    "cniVersion": "0.3.1",
-    "type": "loopback"
-}
-EOF
-```
+This setup uses kube-router for networking.
 
 ### Configure containerd
 
@@ -194,14 +149,13 @@ clusterDomain: "cluster.local"
 clusterDNS:
   - "10.32.0.10"
 podCIDR: "${POD_CIDR}"
-resolvConf: "/run/systemd/resolve/resolv.conf"
+resolvConf: "/etc/resolv.conf"
 runtimeRequestTimeout: "15m"
 tlsCertFile: "/var/lib/kubelet/${HOSTNAME}.pem"
 tlsPrivateKeyFile: "/var/lib/kubelet/${HOSTNAME}-key.pem"
 EOF
 ```
 
-> The `resolvConf` configuration is used to avoid loops when using CoreDNS for service discovery on systems running `systemd-resolved`. 
 
 Create the `kubelet.service` systemd unit file:
 
@@ -221,6 +175,7 @@ ExecStart=/usr/local/bin/kubelet \\
   --image-pull-progress-deadline=2m \\
   --kubeconfig=/var/lib/kubelet/kubeconfig \\
   --network-plugin=cni \\
+  --cni-conf-dir=/etc/cni/net.d
   --register-node=true \\
   --v=2
 Restart=on-failure
@@ -272,6 +227,18 @@ EOF
 ### Start the Worker Services
 
 ```
+swapoff -a
+```
+Edit /etc/fstab, comment out swap. Kubelet won't start with swap.
+
+Make sure you set the hostname
+
+```
+/etc/hostname
+```
+
+
+```
 {
   sudo systemctl daemon-reload
   sudo systemctl enable containerd kubelet kube-proxy
@@ -279,7 +246,7 @@ EOF
 }
 ```
 
-> Remember to run the above commands on each worker node: `worker-0`, `worker-1`, and `worker-2`.
+> Remember to run the above commands on each worker node: `worker-1`, `worker-2`, and `worker-3`.
 
 ## Verification
 
@@ -287,9 +254,10 @@ EOF
 
 List the registered Kubernetes nodes:
 
+On controller-1:
+
 ```
-gcloud compute ssh controller-0 \
-  --command "kubectl get nodes --kubeconfig admin.kubeconfig"
+kubectl get nodes --kubeconfig admin.kubeconfig
 ```
 
 > output
