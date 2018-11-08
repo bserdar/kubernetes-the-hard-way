@@ -133,6 +133,7 @@ cat > ${instance}-csr.json <<EOF
 EOF
 
 HOST_IP=`grep ${instance} /etc/hosts |cut -f 1 -d " "`
+echo $HOST_IP
 
 ./cfssl gencert \
   -ca=ca.pem \
@@ -320,7 +321,7 @@ EOF
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
-  -hostname=10.32.0.1,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
+  -hostname=10.32.0.1,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,controller-1,kubernetes.default \
   -profile=kubernetes \
   kubernetes-csr.json | ./cfssljson -bare kubernetes
 

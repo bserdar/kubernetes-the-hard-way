@@ -12,7 +12,7 @@ Generate a kubeconfig file suitable for authenticating as the `admin` user:
 
 ```
 {
-  KUBERNETES_PUBLIC_ADDRESS=192.168.1.128
+  KUBERNETES_PUBLIC_ADDRESS=192.168.1.174
 
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.pem \

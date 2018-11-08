@@ -36,7 +36,7 @@ Copy the `encryption-config.yaml` encryption config file to each controller inst
 
 ```
 for instance in controller-1 ; do
-   scp encryption-config.yaml root@${instance}:~/
+   scp encryption-config.yaml root@${instance}:/root
 done
 ```
 

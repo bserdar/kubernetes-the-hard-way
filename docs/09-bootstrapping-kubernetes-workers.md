@@ -1,6 +1,6 @@
 # Bootstrapping the Kubernetes Worker Nodes
 
-In this lab you will bootstrap three Kubernetes worker nodes. The following components will be installed on each node: [runc](https://github.com/opencontainers/runc), [gVisor](https://github.com/google/gvisor), [container networking plugins](https://github.com/containernetworking/cni), [containerd](https://github.com/containerd/containerd), [kubelet](https://kubernetes.io/docs/admin/kubelet), and [kube-proxy](https://kubernetes.io/docs/concepts/cluster-administration/proxies).
+In this lab you will bootstrap three Kubernetes worker nodes. The following components will be installed on each node: [runc](https://github.com/opencontainers/runc), [gVisor](https://github.com/google/gvisor), [container networking plugins](https://github.com/containernetworking/cni), [containerd](https://github.com/containerd/containerd), [kubelet](https://kubernetes.io/docs/admin/kubelet)
 
 ## Prerequisites
 
@@ -29,7 +29,6 @@ wget  \
   https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-plugins-amd64-v0.6.0.tgz \
   https://github.com/containerd/containerd/releases/download/v1.2.0-rc.0/containerd-1.2.0-rc.0.linux-amd64.tar.gz \
   https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl \
-  https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-proxy \
   https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubelet
 ```
 
@@ -40,7 +39,6 @@ sudo mkdir -p \
   /etc/cni/net.d \
   /opt/cni/bin \
   /var/lib/kubelet \
-  /var/lib/kube-proxy \
   /var/lib/kubernetes \
   /var/run/kubernetes
 ```
@@ -51,8 +49,8 @@ Install the worker binaries:
 {
   sudo mv runsc-50c283b9f56bb7200938d9e207355f05f79f0d17 runsc
   sudo mv runc.amd64 runc
-  chmod +x kubectl kube-proxy kubelet runc runsc
-  sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
+  chmod +x kubectl  kubelet runc runsc
+  sudo mv kubectl kubelet runc runsc /usr/local/bin/
   sudo tar -xvf crictl-v1.12.0-linux-amd64.tar.gz -C /usr/local/bin/
   sudo tar -xvf cni-plugins-amd64-v0.6.0.tgz -C /opt/cni/bin/
   tar -xvf containerd-1.2.0-rc.0.linux-amd64.tar.gz
@@ -133,6 +131,8 @@ EOF
 Create the `kubelet-config.yaml` configuration file:
 
 ```
+POD_CIDR=10.200.0.0/16
+
 cat <<EOF | sudo tee /var/lib/kubelet/kubelet-config.yaml
 kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1
@@ -186,87 +186,21 @@ WantedBy=multi-user.target
 EOF
 ```
 
-### Configure the Kubernetes Proxy
-
-```
-sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
-```
-
-Create the `kube-proxy-config.yaml` configuration file:
-
-```
-cat <<EOF | sudo tee /var/lib/kube-proxy/kube-proxy-config.yaml
-kind: KubeProxyConfiguration
-apiVersion: kubeproxy.config.k8s.io/v1alpha1
-clientConnection:
-  kubeconfig: "/var/lib/kube-proxy/kubeconfig"
-mode: "iptables"
-clusterCIDR: "10.200.0.0/16"
-EOF
-```
-
-Create the `kube-proxy.service` systemd unit file:
-
-```
-cat <<EOF | sudo tee /etc/systemd/system/kube-proxy.service
-[Unit]
-Description=Kubernetes Kube Proxy
-Documentation=https://github.com/kubernetes/kubernetes
-
-[Service]
-ExecStart=/usr/local/bin/kube-proxy \\
-  --config=/var/lib/kube-proxy/kube-proxy-config.yaml
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-```
-
 ### Start the Worker Services
 
-```
-swapoff -a
-```
-Edit /etc/fstab, comment out swap. Kubelet won't start with swap.
-
-Make sure you set the hostname
-
-```
-/etc/hostname
-```
 
 
 ```
 {
   sudo systemctl daemon-reload
-  sudo systemctl enable containerd kubelet kube-proxy
-  sudo systemctl start containerd kubelet kube-proxy
+  sudo systemctl enable containerd kubelet 
+  sudo systemctl start containerd kubelet
 }
 ```
 
 > Remember to run the above commands on each worker node: `worker-1`, `worker-2`, and `worker-3`.
 
-## Verification
 
-> The compute instances created in this tutorial will not have permission to complete this section. Run the following commands from the same machine used to create the compute instances.
-
-List the registered Kubernetes nodes:
-
-On controller-1:
-
-```
-kubectl get nodes --kubeconfig admin.kubeconfig
-```
-
-> output
-
-```
-NAME       STATUS   ROLES    AGE   VERSION
-worker-0   Ready    <none>   35s   v1.12.0
-worker-1   Ready    <none>   36s   v1.12.0
-worker-2   Ready    <none>   36s   v1.12.0
-```
+At this point, worker nodes would show up as NotReady, because we haven't set up networking yet.
 
 Next: [Configuring kubectl for Remote Access](10-configuring-kubectl.md)

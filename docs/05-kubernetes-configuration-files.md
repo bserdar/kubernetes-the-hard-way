@@ -52,39 +52,6 @@ worker-2.kubeconfig
 worker-3.kubeconfig
 ```
 
-### The kube-proxy Kubernetes Configuration File
-
-Generate a kubeconfig file for the `kube-proxy` service:
-
-```
-{
-  ./kubectl config set-cluster kubernetes-the-hard-way \
-    --certificate-authority=ca.pem \
-    --embed-certs=true \
-    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
-    --kubeconfig=kube-proxy.kubeconfig
-
-  ./kubectl config set-credentials system:kube-proxy \
-    --client-certificate=kube-proxy.pem \
-    --client-key=kube-proxy-key.pem \
-    --embed-certs=true \
-    --kubeconfig=kube-proxy.kubeconfig
-
-  ./kubectl config set-context default \
-    --cluster=kubernetes-the-hard-way \
-    --user=system:kube-proxy \
-    --kubeconfig=kube-proxy.kubeconfig
-
-  ./kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
-}
-```
-
-Results:
-
-```
-kube-proxy.kubeconfig
-```
-
 ### The kube-controller-manager Kubernetes Configuration File
 
 Generate a kubeconfig file for the `kube-controller-manager` service:
@@ -194,7 +161,7 @@ Copy the appropriate `kubelet` and `kube-proxy` kubeconfig files to each worker 
 
 ```
 for instance in worker-1 worker-2 worker-3; do
-  scp ${instance}.kubeconfig kube-proxy.kubeconfig root@${instance}:~/
+  scp ${instance}.kubeconfig  root@${instance}:/root
 done
 ```
 
@@ -202,7 +169,7 @@ Copy the appropriate `kube-controller-manager` and `kube-scheduler` kubeconfig f
 
 ```
 for instance in controller-1 ; do
-  scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig root@${instance}:~/
+  scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig root@${instance}:/root
 done
 ```
 
