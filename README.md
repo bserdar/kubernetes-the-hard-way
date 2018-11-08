@@ -9,6 +9,10 @@ will require a load balancer.
 
 This uses [kube-router](https://github.com/cloudnativelabs/kube-router) to setup pod networking.
 
+I am converting this to install a fully functional k8s cluster for
+home, with an integrated registry and storage. I'll update this
+tutorial as I build those pieces.
+
 ## Labs
 
 
@@ -26,3 +30,6 @@ This uses [kube-router](https://github.com/cloudnativelabs/kube-router) to setup
 * [Deploying the DNS Cluster Add-on](docs/12-dns-addon.md)
 * [Smoke Test](docs/13-smoke-test.md)
 
+More stuff:
+
+* [Deploying an internal Docker registry](docs/local-registry.md)
