@@ -7,7 +7,7 @@ Pods scheduled to a node receive an IP address from the node's Pod CIDR range. A
 
 ## Routes
 
-Simplest solution is running kube-router without service proxy:
+Simplest solution is running kube-router with service proxy:
 
 ```
 wget https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/generic-kuberouter.yaml
