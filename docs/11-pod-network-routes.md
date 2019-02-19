@@ -10,10 +10,10 @@ Pods scheduled to a node receive an IP address from the node's Pod CIDR range. A
 Simplest solution is running kube-router with service proxy:
 
 ```
-wget https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/generic-kuberouter.yaml
+wget https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/generic-kuberouter-all-features.yaml
 ```
 
-Edit the generic-kuberouter.yaml file and change clusterCIDR and api server:
+Edit the generic-kuberouter-all-features.yaml file and change clusterCIDR and api server:
 ```
  ...
  kubeconfig: |
@@ -28,7 +28,7 @@ Edit the generic-kuberouter.yaml file and change clusterCIDR and api server:
 ```
 
 ```
-kubectl apply -f generic-kuberouter.yaml
+kubectl apply -f generic-kuberouter-all-features.yaml
 ```
 
 This should run kube-router on all worker nodes. After this:

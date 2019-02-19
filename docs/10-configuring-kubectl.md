@@ -48,19 +48,6 @@ scheduler            Healthy   ok
 etcd-0               Healthy   {"health":"true"}
 ```
 
-List the nodes in the remote Kubernetes cluster:
-
-```
-kubectl get nodes
-```
-
-> output
-
-```
-NAME       STATUS   ROLES    AGE    VERSION
-worker-1   Ready    <none>   117s   v1.12.0
-worker-2   Ready    <none>   118s   v1.12.0
-worker-3   Ready    <none>   118s   v1.12.0
-```
+kubectl get nodes should show "Not Reader" for all nodes.
 
 Next: [Provisioning Pod Network Routes](11-pod-network-routes.md)
